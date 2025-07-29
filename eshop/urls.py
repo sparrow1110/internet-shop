@@ -8,7 +8,7 @@ from eshop import settings
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("main.urls", namespace="main")),
-    path("catalog/<slug:slug>", include("goods.urls", namespace="catalog"))
+    path("catalog/", include("goods.urls", namespace="catalog"))
 ]
 
 if settings.DEBUG:
