@@ -26,14 +26,3 @@ def q_search(query):
     ))
 
     return result
-
-    # keywords = [word for word in query.split() if len(word) > 2]
-    # print(keywords)
-    #
-    # q_objects = Q()
-    #
-    # for word in keywords:
-    #     q_objects |= Q(description__icontains=word)
-    #     q_objects |= Q(name__icontains=word)
-    #
-    # return Products.objects.filter(q_objects)
