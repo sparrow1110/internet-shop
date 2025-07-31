@@ -176,6 +176,7 @@
                 </div>
                 <div class="col-lg-10">
                     <!-- Контент на странице -->
+                    {% include "includes/notifications.html" %}
                     {% block content %} {% endblock %}
                 </div>
             </div>
@@ -183,6 +184,7 @@
     </section>
     {% block footer %} {% endblock %}
     <script src="{% static 'js/bootstrap/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/jquery/jquery-3.7.0.min.js' %}"></script>
 </body>
 
 </html>
