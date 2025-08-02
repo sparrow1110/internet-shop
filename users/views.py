@@ -23,6 +23,13 @@ def login(request):
                 messages.success(request, f"{username}, Вы вошли в аккаунт")
 
                 if session_key:
+                    # Очищаем старую корзину пользователя
+                    forgot_carts = Cart.objects.filter(user=user)
+
+                    if forgot_carts.exists():
+                        forgot_carts.delete()
+
+                    # Добавляем корзину из анонимной сессии
                     Cart.objects.filter(session_key=session_key).update(user=user)
 
                 redirect_page = request.POST.get("next", None)
