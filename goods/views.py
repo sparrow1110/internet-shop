@@ -11,11 +11,15 @@ def catalog(request, category_slug=None):
     query = request.GET.get("q", None)
 
     if category_slug == "all":
+        category_name = "Все товары"
         goods = Products.objects.all()
     elif query:
+        category_name = ""
         goods = q_search(query)
     else:
-        goods = Products.objects.filter(category__slug=category_slug)
+        category = get_object_or_404(Categories, slug=category_slug)
+        category_name = category.name
+        goods = Products.objects.filter(category=category)
         if not goods.exists():
             raise Http404()
 
@@ -29,9 +33,10 @@ def catalog(request, category_slug=None):
     current_page = paginator.get_page(int(page))
 
     context = {
-        "title": "ModaHouse - Каталог",
+        "title": f"ModaHouse - {category_name}",
         "goods": current_page,
-        "slug_url": category_slug
+        "slug_url": category_slug,
+        "category": category_name
     }
 
     return render(request, "goods/catalog.html", context=context)

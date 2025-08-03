@@ -39,9 +39,6 @@ $(document).ready(function () {
                  cartCount++;
                  goodsInCartCount.text(cartCount);
 
-                 // Меняем содержимое корзины на ответ от django (новый отрисованный фрагмент разметки корзины)
-                 var cartItemsContainer = $("#cart-items-container");
-                 cartItemsContainer.html(data.cart_items_html);
 
              },
 
@@ -105,7 +102,7 @@ $(document).ready(function () {
 
 
 
-     // Теперь + - количества товара
+     // + - количества товара
      // Обработчик события для уменьшения значения
      $(document).on("click", ".decrement", function () {
          // Берем ссылку на контроллер django из атрибута data-cart-change-url
@@ -188,17 +185,6 @@ $(document).ready(function () {
         }, 7000);
     }
 
-    // При клике по значку корзины открываем всплывающее(модальное) окно
-    $('#modalButton').click(function () {
-        $('#exampleModal').appendTo('body');
-
-        $('#exampleModal').modal('show');
-    });
-
-    // Собыите клик по кнопке закрыть окна корзины
-    $('#exampleModal .btn-close').click(function () {
-        $('#exampleModal').modal('hide');
-    });
 
     // Обработчик события радиокнопки выбора способа доставки
     $("input[name='requires_delivery']").change(function() {
