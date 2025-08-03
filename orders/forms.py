@@ -29,3 +29,5 @@ class CreateOrderForm(forms.Form):
         pattern = re.compile(r'^\d{10}$')
         if not pattern.match(data):
             raise forms.ValidationError("Неверный формат номера")
+
+        return data

@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import render, redirect
@@ -8,6 +9,7 @@ from orders.forms import CreateOrderForm
 from orders.models import Order, OrderItem
 
 
+@login_required
 def create_order(request):
     if request.method == "POST":
         form = CreateOrderForm(data=request.POST)
@@ -21,7 +23,7 @@ def create_order(request):
                         # Формируем заказ
                         order = Order.objects.create(
                             user=user,
-                            phone_number = form.cleaned_data['phone_number'],
+                            phone_number=form.cleaned_data['phone_number'],
                             requires_delivery=form.cleaned_data['requires_delivery'],
                             delivery_address=form.cleaned_data['delivery_address'],
                             payment_on_get=form.cleaned_data['payment_on_get']
@@ -59,13 +61,14 @@ def create_order(request):
     else:
         initial = {
             'first_name': request.user.first_name,
-            'last_name': request.user.last_name
+            'last_name': request.user.last_name,
         }
 
         form = CreateOrderForm(initial=initial)
 
     context = {
         'title': 'ModaHouse - Оформление заказа',
-        'form': form
+        'form': form,
+        'order': True
     }
     return render(request, 'orders/create_order.html', context=context)
