@@ -1,52 +1,61 @@
-from django.core.paginator import Paginator
 from django.http import Http404
-from django.shortcuts import render, get_list_or_404, get_object_or_404
+from django.views.generic import DetailView, ListView
 from goods.models import Categories, Products
 from goods.utils import q_search
 
 
-def catalog(request, category_slug=None):
-    on_sale = request.GET.get("on_sale", None)
-    order_by = request.GET.get("order_by", None)
-    query = request.GET.get("q", None)
+class CatalogView(ListView):
+    model = Products
+    template_name = "goods/catalog.html"
+    context_object_name = "goods"
+    paginate_by = 3
 
-    if category_slug == "all":
-        category_name = "Все товары"
-        goods = Products.objects.all()
-    elif query:
-        category_name = ""
-        goods = q_search(query)
-    else:
-        category = get_object_or_404(Categories, slug=category_slug)
-        category_name = category.name
-        goods = Products.objects.filter(category=category)
-        if not goods.exists():
-            raise Http404()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "ModaHouse - Каталог"
+        context['slug_url'] = self.kwargs.get("category_slug")
+        if context['slug_url']:
+            if context['slug_url'] != "all":
+                category = Categories.objects.get(slug=self.kwargs["category_slug"])
+                context['category'] = category.name
+            else:
+                context['category'] = "Все товары"
+        return context
 
-    if on_sale:
-        goods = goods.filter(discount__gt=0)
+    def get_queryset(self):
+        category_slug = self.kwargs.get("category_slug")
+        on_sale = self.request.GET.get("on_sale")
+        order_by = self.request.GET.get("order_by")
+        query = self.request.GET.get("q")
 
-    if order_by and order_by != "default":
-        goods = goods.order_by(order_by)
-    paginator = Paginator(goods, 3)
-    page = request.GET.get("page", 1)
-    current_page = paginator.get_page(int(page))
+        if category_slug == "all":
+            goods = super().get_queryset()
+        elif query:
+            goods = q_search(query)
+        else:
+            goods = super().get_queryset().filter(category__slug=category_slug)
+            if not goods:
+                raise Http404()
 
-    context = {
-        "title": f"ModaHouse - {category_name}",
-        "goods": current_page,
-        "slug_url": category_slug,
-        "category": category_name
-    }
+        if on_sale:
+            goods = goods.filter(discount__gt=0)
 
-    return render(request, "goods/catalog.html", context=context)
+        if order_by and order_by != "default":
+            goods = goods.order_by(order_by)
+
+        return goods
 
 
-def product(request, product_slug):
-    product = Products.objects.get(slug=product_slug)
-    context = {
-        "title": f"ModaHouse - {product.name}",
-        "product": product,
-    }
+class ProductView(DetailView):
+    template_name = "goods/product.html"
+    slug_url_kwarg = "product_slug"
+    context_object_name = "product"
 
-    return render(request, "goods/product.html", context)
+    def get_object(self, queryset=None):
+        product = Products.objects.get(slug=self.kwargs[self.slug_url_kwarg])
+        return product
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.object.name
+        return context
