@@ -2,151 +2,220 @@
 {% load static %}
 {% load goods_tags %}
 
-
-{% block footer %}
-    <footer class="py-4 bg-dark">
-        <div class="container">
-            <p class="m-0 text-center text-white">Copyright &copy; ModaHouse 2025</p>
-        </div>
-    </footer>
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/my_footer_css.css' %}">
 {% endblock %}
 
-
 {% block filters %}
-    <!-- Форма фильтров -->
-    <div style="height: 85px;"></div>
-    <div class="card bg-dark p-3 mt-3 sticky-top" style="top: 20px;">
-        <h5 class="text-white mb-3">Фильтры</h5>
+<div style="height: 85px;"></div>
+<div class="card bg-dark p-3 mt-3 sticky-top" style="top: 20px;">
+    <h5 class="text-white mb-3">Фильтры</h5>
+    <form id="filtersForm">
+        <div class="form-check text-white mb-2">
+            <input class="form-check-input" type="checkbox" name="on_sale" id="flexCheckDefault" value="on">
+            <label class="form-check-label" for="flexCheckDefault">Товары по акции</label>
+        </div>
 
-        <form action="{% if request.GET.q %}{% url 'catalog:search' %}{% else %}{% url 'catalog:index' slug_url %}{% endif %}" method="get">
-            <div class="form-check text-white mb-2">
-                <input class="form-check-input" type="checkbox" name="on_sale" id="flexCheckDefault" value="on"
-                       {% if request.GET.on_sale == "on" %}checked{% endif %}>
-                {% if request.GET.q %}
-                    <input type="hidden" name="q" value="{{ request.GET.q }}">
-                {% endif %}
-                <label class="form-check-label" for="flexCheckDefault">Товары по акции</label>
-            </div>
-
-            <p class="text-white mt-3 mb-2">Сортировать:</p>
-
-            <div class="form-check text-white mb-2">
-                <input class="form-check-input" type="radio" name="order_by" id="flexRadioDefault1"
-                       value="default" {% if not request.GET.order_by or request.GET.order_by == "default" %}checked{% endif %}>
-                <label class="form-check-label" for="flexRadioDefault1">По умолчанию</label>
-            </div>
-
-            <div class="form-check text-white mb-2">
-                <input class="form-check-input" type="radio" name="order_by" id="flexRadioDefault2"
-                       value="price" {% if request.GET.order_by == "price" %}checked{% endif %}>
-                <label class="form-check-label" for="flexRadioDefault2">От дешевых к дорогим</label>
-            </div>
-
-            <div class="form-check text-white mb-3">
-                <input class="form-check-input" type="radio" name="order_by" id="flexRadioDefault3"
-                       value="-price" {% if request.GET.order_by == "-price" %}checked{% endif %}>
-                <label class="form-check-label" for="flexRadioDefault3">От дорогих к дешевым</label>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Применить</button>
-        </form>
-    </div>
+        <p class="text-white mt-3 mb-2">Сортировать:</p>
+        <div class="form-check text-white mb-2">
+            <input class="form-check-input" type="radio" name="order_by" value="default" checked>
+            <label class="form-check-label">По умолчанию</label>
+        </div>
+        <div class="form-check text-white mb-2">
+            <input class="form-check-input" type="radio" name="order_by" value="price">
+            <label class="form-check-label">От дешевых к дорогим</label>
+        </div>
+        <div class="form-check text-white mb-3">
+            <input class="form-check-input" type="radio" name="order_by" value="-price">
+            <label class="form-check-label">От дорогих к дешевым</label>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Применить</button>
+    </form>
+</div>
 {% endblock %}
 
 {% block content %}
-    <div class="mb-3">
-        <h2>
-            {% if category %}
+<div class="mb-3">
+    <h2 id="catalogTitle">
+        {% if category %}
                 {{ category }}
             {% elif request.GET.q %}
                 Результаты поиска: "{{ request.GET.q }}"
             {% else %}
                 Все товары
             {% endif %}
+    </h2>
+</div>
 
+<div id="productsContainer" class="row"></div>
+<div id="paginationContainer"></div>
 
-        </h2>
-    </div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("filtersForm");
+    const productsContainer = document.getElementById("productsContainer");
+    const paginationContainer = document.getElementById("paginationContainer");
 
-    <!-- Остальной контент страницы -->
-    {% if request.GET.q and not goods %}
-        <link rel="stylesheet" href="{% static 'css/my_footer_css.css' %}">
-        <h2 class="mt-4">По вашему запросу ничего не найдено</h2>
-    {% endif %}
-    <div class="row">
+    const pathParts = window.location.pathname.split("/").filter(Boolean);
+    const isSearch = pathParts[1] === "search";
+    const categorySlug = !isSearch ? pathParts[1] || "all" : null;
 
-        {% for product in goods %}
-        <!-- Карта товара -->
-        <div class="col-lg-4 col-md-6 p-4">
-            <div class="card border-primary rounded custom-shadow">
-                {% if product.image %}
-                <img src="{{product.image.url}}" class="card-img-top" alt="{{product.name}}">
-                {% else %}
-                <img src="{% static 'images/Not found image.png' %}" class="card-img-top" alt="...">
-                {% endif %}
-                <div class="card-body">
-                    <a href="{% url 'catalog:product' product.slug %}">
-                        <p class="card-title">
-                            {% autoescape off %}
-                            {% if product.headline %}
-                            {{product.headline}}
-                            {% else %}
-                            {{product.name}}
-                            {% endif %}
-                            {% endautoescape %}
-                        </p>
-                    </a>
-                    <p class="card-text text-truncate">
-                        {% autoescape off %}
-                            {% if product.bodyline %}
-                            {{product.bodyline}}
-                            {% else %}
-                            {{product.description}}
-                            {% endif %}
-                        {% endautoescape %}
-                    </p>
-                    <p class="product_id">id: {{product.display_id}}</p>
-                    <div class="d-flex justify-content-between">
-                        {% if product.discount %}
-                        <p><s>{{product.price}}</s> $</p>
-                        <p><strong>{{product.sell_price}}</strong></p>
-                        <span class="badge bg-warning text-dark">Скидка {{product.discount}} %</span>
-                        {% else %}
-                        <p><strong>{{product.price}} $</strong></p>
-                        {% endif %}
-                        <a href="{% url 'cart:cart_add' %}" class="btn add-to-cart"
-                        data-product-id="{{product.id}}">
-                            {% csrf_token %}
-                            <img class="mx-1" src="{% static 'icons/cart-plus.svg' %}" alt="Catalog Icon"
-                                 width="32" height="32">
-                        </a>
+    function fetchProducts(page = 1, pushUrl = true) {
+        const params = new URLSearchParams(new FormData(form));
+        params.append("page", page);
+
+        if (isSearch) {
+            // Получаем q из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get("q") || "";
+            params.set("q", query);
+        } else {
+            params.set("category_slug", categorySlug);
+        }
+
+        // Обновляем URL в браузере
+        if (pushUrl) {
+            const basePath = isSearch ? "/catalog/search/" : `/catalog/${categorySlug}/`;
+            const newUrl = `${basePath}?${params.toString()}`;
+            history.pushState(null, "", newUrl);
+        }
+
+        fetch(`/api/v1/products/?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                renderProducts(data.results);
+                renderPagination(data, params);
+                updateTitle(params);
+            });
+    }
+
+    function updateTitle(params) {
+        const title = document.getElementById("catalogTitle");
+        if (isSearch) {
+            const search = params.get("q") || "";
+            title.textContent = search ? `Результаты поиска: "${search}"` : "Поиск";
+        }
+    }
+
+    function renderProducts(products) {
+        productsContainer.innerHTML = "";
+        if (products.length === 0) {
+            productsContainer.innerHTML = "<h2>По вашему запросу ничего не найдено</h2>";
+            return;
+        }
+        products.forEach(product => {
+            // форматирование ID: дополняем нулями до 5 символов
+            const formattedId = product.pk.toString().padStart(5, "0");
+
+            // форматирование цен: два знака после запятой
+            const sellPrice = parseFloat(product.sell_price).toFixed(2);
+
+            productsContainer.innerHTML += `
+                <div class="col-lg-4 col-md-6 p-4">
+                    <div class="card border-primary rounded custom-shadow">
+                        <img src="${product.image || '/static/images/Not found image.png'}"
+                             class="card-img-top" alt="${product.name}">
+                        <div class="card-body">
+                            <a href="/catalog/product/${product.slug}">
+                                <p class="card-title">${product.name}</p>
+                            </a>
+                            <p class="card-text text-truncate">${product.description}</p>
+                            <p class="product_id">id: ${formattedId}</p>
+                            <div class="d-flex justify-content-between">
+                                ${product.discount != 0
+                                    ? `<p><s>${product.price}</s> $</p>
+                                       <p><strong>${sellPrice} $</strong></p>
+                                       <span class="badge bg-warning text-dark">Скидка ${product.discount} %</span>`
+                                    : `<p><strong>${product.price} $</strong></p>`}
+                                <a href="/cart/cart_add/" class="btn add-to-cart" data-product-id="${product.pk}">
+                                    {% csrf_token %}
+                                    <img class="mx-1" src="/static/icons/cart-plus.svg" alt="Catalog Icon"
+                                         width="32" height="32">
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        {% endfor %}
+            `;
+        });
+    }
 
+    function renderPagination(data, currentParams) {
+        paginationContainer.innerHTML = "";
+        if (!data.previous && !data.next) return;
 
-    </div>
-    <!-- Пагинация -->
-    {% if goods %}
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-center my-4">
-            <div class="custom-shadow d-flex">
-                <li class="page-item {% if not page_obj.has_previous %}  disabled {% endif %}">
-                    <a class="page-link" href="{% if page_obj.has_previous %}?{% change_params page=page_obj.previous_page_number %}{% else %}#{% endif %}">Предыдущая</a>
+        const pageSize = 3; // Соответствует page_size в API
+        const totalPages = Math.ceil(data.count / pageSize); // Общее количество страниц
+        const currentPage = parseInt(currentParams.get("page") || "1"); // Текущая страница
+        const range = 2; // Показываем 2 страницы до и после текущей
+        const startPage = Math.max(1, currentPage - range); // Начальная страница диапазона
+        const endPage = Math.min(totalPages, currentPage + range); // Конечная страница диапазона
+
+        let paginationHTML = `
+            <nav>
+                <ul class="pagination justify-content-center my-4">
+                    <li class="page-item ${data.previous ? "" : "disabled"}">
+                        <a class="page-link" href="#" data-page="${getPageFromUrl(data.previous)}">Предыдущая</a>
+                    </li>
+        `;
+
+        // Добавляем ссылки на номера страниц
+        for (let i = startPage; i <= endPage; i++) {
+            const isActive = i === currentPage ? "active" : "";
+            paginationHTML += `
+                <li class="page-item ${isActive}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
                 </li>
-                {% for page in page_obj.paginator.page_range %}
-                {% if page >= page_obj.number|add:-2 and page <= page_obj.number|add:2 %}
-                <li class="page-item {% if page_obj.number == page %} active {% endif %}">
-                    <a class="page-link" href="?{% change_params page=page %}">{{page}}</a></li>
-                {% endif %}
-                {% endfor %}
-                <li class="page-item {% if not page_obj.has_next %}  disabled {% endif %}">
-                    <a class="page-link" href="{% if page_obj.has_next %}?{% change_params page=page_bj.next_page_number %}{% else %}#{% endif %}">Следующая</a>
-                </li>
-            </div>
-        </ul>
-    </nav>
-    {% endif %}
+            `;
+        }
+
+        paginationHTML += `
+                    <li class="page-item ${data.next ? "" : "disabled"}">
+                        <a class="page-link" href="#" data-page="${getPageFromUrl(data.next)}">Следующая</a>
+                    </li>
+                </ul>
+            </nav>
+        `;
+
+        paginationContainer.innerHTML = paginationHTML;
+
+        // Добавляем обработчики событий для ссылок пагинации
+        paginationContainer.querySelectorAll("a.page-link").forEach(link => {
+            link.addEventListener("click", function (e) {
+                e.preventDefault();
+                const page = this.getAttribute("data-page");
+                if (page) {
+                    fetchProducts(page);
+                }
+            });
+        });
+    }
+
+    function getPageFromUrl(url) {
+        if (!url) return null;
+        const match = url.match(/page=(\d+)/);
+        return match ? match[1] : 1;
+    }
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        fetchProducts(1); // всегда с первой страницы при смене фильтров
+    });
+
+    // Загрузка страницы с сохранёнными параметрами
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = urlParams.get("page") || 1;
+    form.querySelectorAll("input").forEach(input => {
+        if (urlParams.has(input.name)) {
+            if (input.type === "checkbox") {
+                input.checked = urlParams.get(input.name) === input.value;
+            } else if (input.type === "radio") {
+                input.checked = input.value === urlParams.get(input.name);
+            }
+        }
+    });
+    fetchProducts(page, false);
+});
+
+</script>
 {% endblock %}
