@@ -1,5 +1,4 @@
 from django.http import Http404
-from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 
@@ -8,7 +7,6 @@ from goods.models import Products
 from goods.utils import q_search
 
 
-# Create your views here.
 class ProductsListPagination(PageNumberPagination):
     page_size = 3
 
@@ -41,3 +39,7 @@ class ProductsListView(generics.ListAPIView):
         return goods
 
 
+class ProductDetailView(generics.RetrieveAPIView):
+    serializer_class = ProductSerializer
+    queryset = Products.objects.all()
+    lookup_field = 'pk'
