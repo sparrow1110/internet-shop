@@ -12,7 +12,9 @@ urlpatterns = [
     path("user/", include("users.urls", namespace="user")),
     path("cart/", include("carts.urls", namespace="cart")),
     path("orders/", include("orders.urls", namespace="orders")),
-    path("", include("api.urls"))
+    path("", include("api.urls")),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken')),
 ]
 
 if settings.DEBUG:

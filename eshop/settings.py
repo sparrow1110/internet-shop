@@ -24,6 +24,11 @@ INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True  # Перенаправлять HTTP -> HTTPS
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -35,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "rest_framework",
+    "rest_framework.authtoken",
     "api",
     "main",
     "goods",
@@ -42,6 +48,7 @@ INSTALLED_APPS = [
     "carts",
     "orders",
     "debug_toolbar",
+    "djoser"
 ]
 
 MIDDLEWARE = [
@@ -139,3 +146,22 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"
 LOGIN_URL = "/user/login/"
 LOGIN_REDIRECT_URL = "/"
+
+
+REST_FRAMEWORK = {
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
+}
+
+DJOSER = {
+    'SERIALIZERS': {
+        'current_user': 'api.serializers.UserProfileSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticated'],
+    },
+}
